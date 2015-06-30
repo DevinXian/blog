@@ -8,6 +8,9 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var routes = require('./routes/index');
 var flash = require('connect-flash');
+var multer = require('multer');
+
+var settings = require('./config/settings');
 
 var app = express();
 
@@ -30,6 +33,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
+app.use(multer({dest: settings.upload_dir}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 routes(app);

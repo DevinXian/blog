@@ -1,4 +1,5 @@
 var mongodb = require('./db');
+var markdown = require('markdown').markdown;
 
 function Post(name, title, post) {
     this.name = name;
@@ -41,7 +42,7 @@ Post.prototype.save = function (callback) {
     });
 };
 
-Post.get = function (name, callback) {
+Post.getAll = function (name, callback) {
     mongodb.connect(function (err, db) {
         if (err) {
             return callback(err);
@@ -60,7 +61,114 @@ Post.get = function (name, callback) {
                     db.close();
                     return callback(err);
                 }
+                docs.forEach(function (doc) {
+                    doc.post = markdown.toHTML(doc.post);
+                });
                 callback(null, docs);
+            });
+        });
+    });
+};
+
+Post.getOne = function (name, day, title, callback) {
+    mongodb.connect(function (err, db) {
+        if (err) {
+            return callback(err);
+        }
+        db.collection('posts', function (err, collection) {
+            if (err) {
+                db.close();
+                return callback(err);
+            }
+            collection.findOne({
+                'name': name,
+                'time.day': day,
+                'title': title
+            }, function (err, doc) {
+                if (err) {
+                    db.close();
+                    return callback(err);
+                }
+                doc.post = markdown.toHTML(doc.post);
+                callback(null, doc);
+            });
+        });
+    });
+};
+
+//编辑
+Post.edit = function (name, day, title, callback) {
+    mongodb.connect(function (err, db) {
+        if (err) {
+            return callback(err);
+        }
+        db.collection('posts', function (err, collection) {
+            if (err) {
+                db.close();
+                return callback(err);
+            }
+            collection.findOne({
+                'name': name,
+                'time.day': day,
+                'title': title
+            }, function (err, doc) {
+                if (err) {
+                    db.close();
+                    return callback(err);
+                }
+                callback(null, doc);//markdown raw模式
+            });
+        });
+    });
+};
+
+//更新
+Post.update = function (name, day, title, post, callback) {
+    mongodb.connect(function (err, db) {
+        if (err) {
+            return callback(err);
+        }
+        db.collection('posts', function (err, collection) {
+            if (err) {
+                db.close();
+                return callback(err);
+            }
+            collection.update({
+                'name': name,
+                'time.day': day,
+                'title': title
+            }, {$set: {post: post}}, function (err) {
+                if (err) {
+                    db.close();
+                }
+                callback(err);
+            });
+        });
+    });
+};
+
+//删除
+Post.remove = function (name, day, title, callback) {
+    mongodb.connect(function (err, db) {
+        if (err) {
+            return callback(err);
+        }
+        db.collection('posts', function (err, collection) {
+            if (err) {
+                db.close();
+                return callback(err);
+            }
+            collection.remove({
+                'name': name,
+                'time.day': day,
+                'title': title
+            }, {
+                w: 1
+            }, function (err) {
+                if (err) {
+                    db.close();
+                }
+                callback(err);
             });
         });
     });
