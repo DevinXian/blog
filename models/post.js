@@ -23,7 +23,8 @@ Post.prototype.save = function (callback) {
         name: this.name,
         title: this.title,
         post: this.post,
-        time: time
+        time: time,
+        comments: []
     };
     mongodb.connect(function (err, db) {
         if (err) {
@@ -89,7 +90,12 @@ Post.getOne = function (name, day, title, callback) {
                     db.close();
                     return callback(err);
                 }
-                doc.post = markdown.toHTML(doc.post);
+                if (doc) {
+                    doc.post = markdown.toHTML(doc.post);
+                    (doc.comments || []).forEach(function (comment) {
+                        comment.content = markdown.toHTML(comment.content);
+                    });
+                }
                 callback(null, doc);
             });
         });
